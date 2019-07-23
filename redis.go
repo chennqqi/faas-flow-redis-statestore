@@ -15,8 +15,8 @@ type RedisStateStore struct {
 }
 
 // Update Compare and Update a valuer
-type Incrementer interface{	
-	func Incr(key string, value int64) (int64, error) 
+type Incrementer interface {
+	Incr(key string, value int64) (int64, error)
 }
 
 func GetRedisStateStore(address, sentinelName string) (faasflow.StateStore, error) {
