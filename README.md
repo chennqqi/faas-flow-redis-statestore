@@ -12,13 +12,22 @@ docker pull s8sg/consul
 docker stack deploy --compose-file=resource/consul-swarm.yml statestore
 ```
 
+#### Deploy in k8s
+
+```bash
+kubectl apply -f resource/redis-k8s-standalone.yml
+```
+
+or you can install redis service by your self
+
+
 
 ### Use redis StateStore in `faasflow`
 * Set the `stack.yml` with the necessary environments
 ```yaml
     redis_url: "redis_svc:6379"
 ```
-* Use the `ConsulStateStore` as a DataStore on `handler.go`
+* Use the `RedisStateStore` as a DataStore on `handler.go`
 ```go
 redisStateStore "github.com/chennqqi/faas-flow-redis-statestore"
 
