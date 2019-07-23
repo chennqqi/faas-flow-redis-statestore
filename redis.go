@@ -54,8 +54,7 @@ func (this *RedisStateStore) Update(key string, oldValue string, newValue string
 
 	var err error
 	client.Watch(func(tx *redis.Tx) error {
-		pl := tx.Pipeline()
-		value, err := pl.Get(key).Result()
+		value, err := client.Get(key).Result()
 		if err == redis.Nil {
 			err = fmt.Errorf("[%v] not exist", key)
 			return err
@@ -63,11 +62,11 @@ func (this *RedisStateStore) Update(key string, oldValue string, newValue string
 			err = fmt.Errorf("unexpect error %v", err)
 			return err
 		}
-		if value == oldValue {
-			pl.Set(key, newValue, 0)
-		} else {
-			err = fmt.Errorf("[%v] not expect %v != %v", key, value, oldValue)
+		if value != oldValue {
+			err = fmt.Errorf("Old value doesn't match for key %s", key)
+			return err
 		}
+		client.Set(key, newValue, 0)
 		return nil
 	}, key)
 	return err
@@ -94,7 +93,8 @@ func (this *RedisStateStore) Set(key string, value string) error {
 // Get Gets a value
 func (this *RedisStateStore) Get(key string) (string, error) {
 	key = this.KeyPath + "." + key
-	value, err := this.Get(key)
+	client := this.rds
+	value, err := client.Get(key).Result()
 	if err == redis.Nil {
 		return "", fmt.Errorf("failed to get key %s, nil", key)
 	} else if err != nil {
