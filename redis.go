@@ -52,9 +52,8 @@ func (this *RedisStateStore) Update(key string, oldValue string, newValue string
 	key = this.KeyPath + "." + key
 	client := this.rds
 
-	var err error
-	client.Watch(func(tx *redis.Tx) error {
-		value, err := client.Get(key).Result()
+	err := client.Watch(func(tx *redis.Tx) error {
+		value, err := tx.Get(key).Result()
 		if err == redis.Nil {
 			err = fmt.Errorf("[%v] not exist", key)
 			return err
@@ -66,8 +65,11 @@ func (this *RedisStateStore) Update(key string, oldValue string, newValue string
 			err = fmt.Errorf("Old value doesn't match for key %s", key)
 			return err
 		}
-		client.Set(key, newValue, 0)
-		return nil
+		_, err = tx.Pipelined(func(pl redis.Pipeliner) error {
+			pl.Set(key, newValue, 0)
+			return nil
+		})
+		return err
 	}, key)
 	return err
 }
